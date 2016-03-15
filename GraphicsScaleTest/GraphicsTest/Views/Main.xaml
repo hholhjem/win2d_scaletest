@@ -1,0 +1,72 @@
+﻿<Page
+    x:Class="GraphicsTest.Views.Main"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GraphicsTest.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    mc:Ignorable="d"
+	Unloaded="Page_Unloaded">
+
+	<Grid Background="#FF6A00">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="110" />
+		</Grid.RowDefinitions>
+		<VisualStateManager.VisualStateGroups>
+			<VisualStateGroup>
+				<VisualState>
+					<VisualState.StateTriggers>
+						<!-- VisualState to be triggered when window
+                         width is >=360 effective pixels. -->
+						<AdaptiveTrigger  MinWindowWidth="360" />
+					</VisualState.StateTriggers>
+
+					<VisualState.Setters>
+						<Setter Target="imageContainer.MinHeight"
+                                Value="260" />
+					</VisualState.Setters>
+				</VisualState>
+				<VisualState>
+					<VisualState.StateTriggers>
+						<!-- VisualState to be triggered when window
+                         width is >=410 effective pixels. -->
+						<AdaptiveTrigger  MinWindowWidth="410" />
+					</VisualState.StateTriggers>
+
+					<VisualState.Setters>
+						<Setter Target="imageContainer.MinHeight"
+                                Value="310" />
+					</VisualState.Setters>
+				</VisualState>
+			</VisualStateGroup>
+		</VisualStateManager.VisualStateGroups>
+
+		<Grid x:Name="imageContainer"
+			  Grid.Row="0"
+			  MinHeight="220">
+			<Grid>
+				<Grid x:Name="Canvas">
+					<canvas:CanvasControl x:Name="canvasControlBackground"
+									  Draw="CanvasControlBackground_Draw" 
+									  CreateResources="CanvasControlBackground_CreateResources"  
+									  ClearColor="Transparent">
+					</canvas:CanvasControl>
+					<canvas:CanvasControl x:Name="canvasControlForeground"
+									  Draw="CanvasControlForeground_Draw" 
+									  CreateResources="CanvasControlForeground_CreateResources"  
+									  ClearColor="Transparent">
+						<canvas:CanvasControl.RenderTransform>
+							<TranslateTransform />
+						</canvas:CanvasControl.RenderTransform>
+					</canvas:CanvasControl>
+				</Grid>
+				<Image Source="/Assets/images/main_border.png"
+				   VerticalAlignment="Bottom"
+				   Margin="0,0,0,-2"/>
+			</Grid>
+		</Grid>
+	</Grid>
+</Page>
