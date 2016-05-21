@@ -58,9 +58,9 @@
 									  Draw="CanvasControlForeground_Draw" 
 									  CreateResources="CanvasControlForeground_CreateResources"  
 									  ClearColor="Transparent">
-						<canvas:CanvasControl.RenderTransform>
+						<!--<canvas:CanvasControl.RenderTransform>
 							<TranslateTransform />
-						</canvas:CanvasControl.RenderTransform>
+						</canvas:CanvasControl.RenderTransform>-->
 					</canvas:CanvasControl>
 				</Grid>
 				<Image Source="/Assets/images/main_border.png"

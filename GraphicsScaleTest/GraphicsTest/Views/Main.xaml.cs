@@ -20,11 +20,7 @@ namespace GraphicsTest.Views
 		bool loadingForegroundRecourcesComplete = false;
 		CanvasImageBrush opacityMask;
 		CanvasBitmap backgroundImage;
-		CanvasImageBrush foregroundImage;
-		double imageScalefactor;
-		double imageContainerHeight;
-		double imageContainerWidth;
-		double displayScaling;
+		CanvasImageBrush foregroundImageCanvas;
 
 		public Main()
 		{
@@ -35,37 +31,30 @@ namespace GraphicsTest.Views
 		{
 			if (loadingBackgroundRecourcesComplete)
 			{
-				// Background
-				args.DrawingSession.Units = CanvasUnits.Pixels;
+				// Draw background
+				args.DrawingSession.Units = CanvasUnits.Dips;
 
 				var scaleEffect = new ScaleEffect();
 				scaleEffect.Source = backgroundImage;
-				scaleEffect.Scale = new Vector2()
-				{
-					X = (float)imageScalefactor,
-					Y = (float)imageScalefactor
-				};
 
 				var blurEffect = new GaussianBlurEffect();
 				blurEffect.Source = scaleEffect;
-				blurEffect.BlurAmount = 10f * (float)displayScaling;
+				blurEffect.BlurAmount = 15f;
 
-				float backgroundVerticalAdjustment = 46f * (float)displayScaling; ;
+				var sourceRect = new Rect(0, 0, backgroundImage.Size.Width, backgroundImage.Size.Height);
 
-				args.DrawingSession.DrawImage(blurEffect, 0.0f, (backgroundVerticalAdjustment * -1), new Rect(0, 0, imageContainerWidth, imageContainerHeight + backgroundVerticalAdjustment), 0.8f);
+				double widthMinusHeight = sender.Size.Width - sender.Size.Height;
+
+				var destinationRect = new Rect(0, 0, sender.Size.Width, sender.Size.Height + widthMinusHeight);
+
+				args.DrawingSession.DrawImage(blurEffect, destinationRect, sourceRect);
 			}
 		}
-
+		
 		private async void CanvasControlBackground_CreateResources(CanvasControl sender, Microsoft.Graphics.Canvas.UI.CanvasCreateResourcesEventArgs args)
 		{
 			//Load image background
 			backgroundImage = await CanvasBitmap.LoadAsync(sender.Device, new Uri("ms-appx:///Assets/test/card_picture_test1.jpg"));
-
-			//Setting scalefactor
-			displayScaling = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
-			imageContainerWidth = sender.ActualWidth * displayScaling;
-			imageContainerHeight = sender.ActualHeight * displayScaling;
-			imageScalefactor = imageContainerWidth / backgroundImage.Size.Width;
 
 			loadingBackgroundRecourcesComplete = true;
 
@@ -74,40 +63,34 @@ namespace GraphicsTest.Views
 
 		private void CanvasControlForeground_Draw(CanvasControl sender, CanvasDrawEventArgs args)
 		{
+			args.DrawingSession.Units = CanvasUnits.Dips;
+
 			if (loadingForegroundRecourcesComplete)
 			{
-				// Foreground
-				args.DrawingSession.FillGeometry(CanvasGeometry.CreateRectangle(sender, 0, 0, (float)imageContainerWidth, (float)imageContainerHeight), foregroundImage, opacityMask);
+				// Draw foreground
+				args.DrawingSession.FillGeometry(CanvasGeometry.CreateRectangle(sender, 0, 0, (float)sender.Size.Width, (float)sender.Size.Height), foregroundImageCanvas, opacityMask); //remove opacityMask to see the foreground image fully
 			}
 		}
 
 		private async void CanvasControlForeground_CreateResources(CanvasControl sender, Microsoft.Graphics.Canvas.UI.CanvasCreateResourcesEventArgs args)
 		{
 			//Load image background
-			backgroundImage = await CanvasBitmap.LoadAsync(sender.Device, new Uri("ms-appx:///Assets/test/card_picture_test1.jpg"));
+			var foregroundImage = await CanvasBitmap.LoadAsync(sender.Device, new Uri("ms-appx:///Assets/test/card_picture_test1.jpg"));
 
-			//Setting scalefactor
-			displayScaling = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
-			imageContainerWidth = sender.ActualWidth * displayScaling;
-			imageContainerHeight = sender.ActualHeight * displayScaling;
-			imageScalefactor = imageContainerWidth / backgroundImage.Size.Width;
+			var imageSizeFactor = 780;
+
+			var imageSize = (float) sender.Size.Width / imageSizeFactor;
+			var screenWidth = sender.Size.Width / imageSize;
+			var screenHeight = sender.Size.Height / imageSize;
+
+			var xStartPosition = ((screenWidth / 2) - ((foregroundImage.Size.Width) / 2)) * -1; // Position center
+			var yStartPosition = (screenHeight - foregroundImage.Size.Height + 45) * -1; // Postion bottom + 45
 
 			//Load image foreground
-			foregroundImage = new CanvasImageBrush(sender.Device, backgroundImage)
+			foregroundImageCanvas = new CanvasImageBrush(sender.Device, foregroundImage)
 			{
-				SourceRectangle = new Rect(0, 0, UseSize(imageContainerWidth), UseSize(imageContainerHeight)),
-				//Transform = Matrix3x2.CreateScale((float)imageScalefactor * 0.65f) * Matrix3x2.CreateTranslation(130f * (float)imageScalefactor, 70f * (float)imageScalefactor) // Scale and position of center picture
-				//4" WVGA
-				//Transform = Matrix3x2.CreateScale((float)imageScalefactor * 0.43f) * Matrix3x2.CreateTranslation(65f * (float)imageScalefactor, 45f * (float)imageScalefactor) // Scale and position of center picture
-
-				//6" 1080p
-				//Transform = Matrix3x2.CreateScale((float)imageScalefactor * 0.27f) * Matrix3x2.CreateTranslation(40f * (float)imageScalefactor, 25f * (float)imageScalefactor) // Scale and position of center picture
-
-				//5,2" QHD
-				//Transform = Matrix3x2.CreateScale((float)imageScalefactor * 0.17f) * Matrix3x2.CreateTranslation(27f * (float)imageScalefactor, 10f * (float)imageScalefactor) // Scale and position of center picture
-				
-				//Adjusted
-				Transform = Matrix3x2.CreateScale((float)sender.ActualWidth * 0.0011f) * Matrix3x2.CreateTranslation(0.1697f * (float)sender.ActualWidth, 0.13f * (float)sender.ActualWidth)
+				SourceRectangle = new Rect(xStartPosition, yStartPosition, screenWidth, screenHeight),
+				Transform =  Matrix3x2.CreateScale(imageSize) * Matrix3x2.CreateTranslation(0.0f, 0.0f) // Scale and position of center picture
 			};
 
 			//Create Opacity mask for foreground
@@ -115,35 +98,23 @@ namespace GraphicsTest.Views
 
 			using (var ds = circle.CreateDrawingSession())
 			{
-				//Small
-				//ds.FillEllipse(180, 160, 80, 100, Colors.White); // Max width 360 // Position and size of center circle
-				//Large
-				//ds.FillEllipse(230, 180, 110, 110, Colors.White); // Max width 360 // Position and size of center circle
-				//Combined by actualwidth
-				//ds.FillEllipse((float)sender.ActualWidth * 0.532f, (float)sender.ActualWidth * 0.454f, (float)sender.ActualWidth * 0.242f, (float)sender.ActualWidth * 0.282f, Colors.White); // Max width 360 // Position and size of center circle
-				ds.FillEllipse((float)sender.ActualWidth * 0.482f, (float)sender.ActualWidth * 0.454f, (float)sender.ActualWidth * 0.242f, (float)sender.ActualWidth * 0.282f, Colors.White); // Max width 360 // Position and size of center circle
+				ds.FillEllipse((float)sender.Size.Width * 0.5f, (float)sender.Size.Height * 0.7f, (float)sender.Size.Width * 0.24f, (float)sender.Size.Height * 0.46f, Colors.White); // Max width 360 // Position and size of center circle
 			}
 
 			var blurredCircle = new GaussianBlurEffect
 			{
 				Source = circle,
-				BlurAmount = 3f * ((float)sender.ActualWidth/100)
+				BlurAmount = 15f
 			};
 
 			opacityMask = new CanvasImageBrush(sender, blurredCircle)
 			{
-				SourceRectangle = new Rect(0, 0, UseSize(imageContainerWidth), UseSize(imageContainerHeight))
+				SourceRectangle = new Rect(0, 0, sender.Size.Width, sender.Size.Height)
 			};
 
 			loadingForegroundRecourcesComplete = true;
 
 			sender.Invalidate();
-		}
-
-		private double UseSize(double size)
-		{
-			int minSize = 640;
-			return size < minSize ? minSize : size;
 		}
 
 		private void Page_Unloaded(object sender, RoutedEventArgs e)
